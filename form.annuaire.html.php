@@ -1,4 +1,11 @@
 <?php
+/**
+ * Plugin adhesion
+ *
+ * @version	1.4
+ * @date	02/10/2013
+ * @author	Stephane F, Cyril MAGUIRE
+ **/
 if(!defined('PLX_ROOT')) exit; 
 
 $plxMotor = plxMotor::getInstance();
@@ -13,7 +20,7 @@ if($plxPlugin->getParam('showAnnuaire') != 'on') {
 if ( ( !isset($_SESSION['lockArticles']['articles']) && !isset($_SESSION['lockArticles']['categorie']) ) || ($_SESSION['lockArticles']['articles'] != 'on' && $_SESSION['lockArticles']['categorie'] != 'on') ) :
 	echo '<p class="locked">'.$plxPlugin->getLang('L_NEED_AUTH').'</p>';
 else :
-$plxPlugin->getAdherent(PLX_ROOT.$plxPlugin->getParam('adherents'));?>
+$r = $plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');?>
 
 <table class="table" summary="membres">
 	<thead>
@@ -34,9 +41,9 @@ $plxPlugin->getAdherent(PLX_ROOT.$plxPlugin->getParam('adherents'));?>
 	<tbody>
 		<?php 
 		$num = 0;
-		if ($plxPlugin->adherentsList) {
+		if ($r) {
 
-			foreach($plxPlugin->adherentsList as $k=>$v) {
+			foreach($plxPlugin->plxRecord_adherents->result as $k=>$v) {
 				if ($v['validation'] == 1 && $v['coordonnees'] == 'rec') {
 				$ordre = ++$num;
 				echo '<tr class="line-'.($num%2).'">';

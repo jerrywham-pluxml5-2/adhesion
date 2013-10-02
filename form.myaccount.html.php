@@ -2,7 +2,7 @@
 /**
  * Plugin adhesion
  *
- * @version	1.3
+ * @version	1.4
  * @date	02/10/2013
  * @author	Stephane F, Cyril MAGUIRE
  **/
@@ -23,9 +23,8 @@ $plxShow = plxShow::getInstance();
 $plxShow->plxMotor->plxCapcha = new plxCapcha();
 $plxPlugin = $plxShow->plxMotor->plxPlugins->getInstance('adhesion');
 
-$plxPlugin->adherentsList = $plxPlugin->getAdherent(PLX_ROOT.$plxPlugin->getParam('adherents').'plugin.adhesion.adherents.xml' );
+$plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
 
-//print_r($plxPlugin->adherentsList);exit();
 
 if(!isset($_GET['a'])) {
 	header('Location:'.$plxMotor->urlRewrite());
@@ -33,9 +32,9 @@ if(!isset($_GET['a'])) {
 }
 $verif = substr($_GET['a'],5,-3);
 $compte = array(NULL);
-foreach ($plxPlugin->adherentsList as $key => $account) {
+foreach ($plxPlugin->plxRecord_adherents->result as $key => $account) {
 	if (md5($account['mail']) == $verif) {
-		$compte = $plxPlugin->adherentsList[$key];
+		$compte = $plxPlugin->plxRecord_adherents->result[$key];
 		$compte['id'] = $key;
 		break;
 	}

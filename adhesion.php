@@ -2,7 +2,7 @@
 /**
  * Plugin adhesion
  *
- * @version	1.3
+ * @version	1.4
  * @date	02/10/2013
  * @author	Stephane F, Cyril MAGUIRE
  **/
@@ -106,6 +106,15 @@ class adhesion extends plxPlugin {
 		$this->plxGlob_adherents = plxGlob::getInstance(PLX_ROOT.$this->getParam('adherents').'adhesions',false,true,'arts');
 		$this->adherentsList = array_flip(array_keys($this->plxGlob_adherents->aFiles));
 
+		$htaccess = "Allow from none\n";
+		$htaccess .= "Deny from all\n";
+		$htaccess .= "<Files *.php>\n";
+		$htaccess .= "order allow,deny\n";
+		$htaccess .= "deny from all\n";
+		$htaccess .= "</Files>\n";
+		$htaccess .= "Options -Indexes\n";
+
+
 		if ($this->isGutumaActivated) {
 
 			# Emplacement des listes de diffusion de Gutuma
@@ -114,29 +123,21 @@ class adhesion extends plxPlugin {
 			else
 				$this->GutumaListsDir = PLX_ROOT.'data/gutuma';
 
-			$htaccess = "Allow from none\n";
-			$htaccess .= "Deny from all\n";
-			$htaccess .= "<Files *.php>\n";
-			$htaccess .= "order allow,deny\n";
-			$htaccess .= "deny from all\n";
-			$htaccess .= "</Files>\n";
-			$htaccess .= "Options -Indexes\n";
+		# Récupération des listes des anciennes versions de Gutuma
+		if (is_dir(PLX_PLUGINS.'gutuma/news/lists')) {
+			@rename(PLX_PLUGINS.'gutuma/news/lists', $this->GutumaListsDir);
+			touch($this->GutumaListsDir.'/.htaccess');
+			file_put_contents($this->GutumaListsDir.'/.htaccess', $htaccess);
+		}
+		# Récupération de la config des anciennes versions de Gutuma
+		if (is_file(PLX_PLUGINS.'gutuma/news/inc/config.php')) {
+			@mkdir($this->GutumaListsDir.'/inc');
+			@rename(PLX_PLUGINS.'gutuma/news/inc/config.php', $this->GutumaListsDir.'/inc/config.php');
+			touch($this->GutumaListsDir.'/inc/.htaccess');
+			file_put_contents($this->GutumaListsDir.'/inc/.htaccess', $htaccess);
+		}
+		
 
-
-			# Récupération des listes des anciennes versions de Gutuma
-			if (is_dir(PLX_PLUGINS.'gutuma/news/lists')) {
-				@rename(PLX_PLUGINS.'gutuma/news/lists', $this->GutumaListsDir);
-				touch($this->GutumaListsDir.'/.htaccess');
-				file_put_contents($this->GutumaListsDir.'/.htaccess', $htaccess);
-			}
-			# Récupération de la config des anciennes versions de Gutuma
-			if (is_file(PLX_PLUGINS.'gutuma/news/inc/config.php')) {
-				@mkdir($this->GutumaListsDir.'/inc');
-				@rename(PLX_PLUGINS.'gutuma/news/inc/config.php', $this->GutumaListsDir.'/inc/config.php');
-				touch($this->GutumaListsDir.'/inc/.htaccess');
-				file_put_contents($this->GutumaListsDir.'/inc/.htaccess', $htaccess);
-			}
-			
 
 			# On récupère les paramètres de la liste de diffusion
 			$list = $this->getAllGutumaLists(TRUE);
@@ -2124,7 +2125,7 @@ class adhesion extends plxPlugin {
 	 * @author Cyril MAGUIRE
 	 */
 	public function retrieveMyPass($email) {
-		foreach ($this->adherentsList as $key => $compte) {
+		foreach ($this->plxRecord_adherents->result as $key => $compte) {
 			if ($compte['mail'] == $email) {
 				$m = array(
 					'name'=>$this->getParam('nom_asso'),
@@ -2213,7 +2214,7 @@ class adhesion extends plxPlugin {
 	public function getPasswords() {
 		$pw = null;
 		//print_r($this->adherentsList);
-		foreach ($this->adherentsList as $key => $value) {
+		foreach ($this->plxRecord_adherents->result as $key => $value) {
 			$pw[] = array(
 				'rand1' => $value['rand1'],
 				'rand2' => $value['rand2'],
@@ -2237,7 +2238,7 @@ class adhesion extends plxPlugin {
 	 * @author Cyril MAGUIRE
 	 */
 	public function verifPass($pw,$login){
-		$id = md5($login);
+		//$id = md5($login);
 		$listPass = $this->getPasswords();
 		//print_r($listPass);
 
@@ -2245,10 +2246,11 @@ class adhesion extends plxPlugin {
 			$_SESSION['timeout'] = time() + (60*15);
 		}
 
+		$error = false;
 		foreach ($listPass as $k => $v) {
 
 			$logInBase = str_replace(array('-','_'),'',plxUtils::title2url(strtolower($v['nom'].$v['prenom'] )));
-
+			
 			if (sha1($v['salt'].$pw) == $v['pass'] && $login == $logInBase ) {
 				$_SESSION['account'] = plxUtils::charAleatoire(5).md5($v['mail']).plxUtils::charAleatoire(3);
 				$_SESSION['domainAd'] = $this->session_domain;
@@ -2256,18 +2258,20 @@ class adhesion extends plxPlugin {
 				return TRUE;
 			}
 			if ( (sha1($v['salt'].$pw) != $v['pass'] && $login == $logInBase) || (sha1($v['salt'].$pw) == $v['pass'] && $login != $logInBase) ) {
-				if(!isset($_SESSION['maxtry'])) {
-					$_SESSION['maxtry'] = 1;
-				} else{ 
-					$_SESSION['maxtry']++;
-				}
-				return FALSE;
+				$error = true;
+			}
+		}
+		if ($error) {
+			if(!isset($_SESSION['maxtry'])) {
+				$_SESSION['maxtry'] = 1;
+			} else{ 
+				//$_SESSION['maxtry']++;
 			}
 		}
 		if(!isset($_SESSION['maxtry'])) {
 			$_SESSION['maxtry'] = 1;
 		} else{ 
-			$_SESSION['maxtry']++;
+			//$_SESSION['maxtry']++;
 		}
 		return FALSE;
 	}
@@ -3012,7 +3016,7 @@ END;
 					
 					$pw = md5($_POST['password']);
 					
-					if ($this->verifPass($pw)) {
+					if ($this->verifPass($pw,$_POST['password'])) {
 						$_SESSION['lockArticles']['categorie'] = $_SESSION['lockArticles']['articles'] = 'on';
 						$url = $plxMotor->urlRewrite('?'.$plxMotor->aCats[$plxMotor->cible]['url']);
 						$_SESSION['lockArticles']['success'] = $this->getlang('L_PLUGIN_GOOD_PASSWORD');
