@@ -22,34 +22,46 @@ $aK = array_map('strtolower', $aA);
 $aActivites = array_combine($aK, $aA);
 
 $enteteTableau = '
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_NAME').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_FIRST_NAME').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_ADRESSE').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_ZIP_CODE').'&nbsp;
-	'.$plxPlugin->getLang('L_ADMIN_LIST_CITY').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_TEL').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_MAIL').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_CHOICE').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_NAME').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_FIRST_NAME').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_ADRESSE').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_ZIP_CODE').'&nbsp;
+			'.$plxPlugin->getLang('L_ADMIN_LIST_CITY').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_TEL').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_MAIL').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_CHOICE').'</th>
 ';
 if ($plxPlugin->getParam('typeAnnuaire') == 'professionnel') {
 $enteteTableau = '
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_NAME').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_FIRST_NAME').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_ACTIVITY').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_STRUCTURE').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_DPT').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_ADRESSE').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_ZIP_CODE').'&nbsp;
-	'.$plxPlugin->getLang('L_ADMIN_LIST_CITY').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_TEL').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_TEL_OFFICE').'<br/>
-	'.$plxPlugin->getLang('L_ADMIN_LIST_MAIL').'</th>
-<th>'.$plxPlugin->getLang('L_ADMIN_LIST_CHOICE').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_NAME').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_FIRST_NAME').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_ACTIVITY').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_STRUCTURE').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_DPT').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_ADRESSE').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_ZIP_CODE').'&nbsp;
+			'.$plxPlugin->getLang('L_ADMIN_LIST_CITY').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_TEL').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_TEL_OFFICE').'<br/>
+			'.$plxPlugin->getLang('L_ADMIN_LIST_MAIL').'</th>
+		<th>'.$plxPlugin->getLang('L_ADMIN_LIST_CHOICE').'</th>
 ';
+}
+
+
+//Mot de passe oublié, on renvoie la clé si l'email correspond
+if(isset($_GET['forgetmypass']) && !empty($_GET['forgetmypass'])) {
+	$mail = str_replace('true&mail=','',base64_decode($_GET['forgetmypass']));
+	if($plxPlugin->retrieveMyPass(plxUtils::strCheck($mail) )) {
+		$_SESSION['info'] = $plxPlugin->getLang('L_PASS_SENT');
+		header('Location: plugin.php?p=adhesion');
+		exit();
+	}
 }
 
 # On édite les catégories
 if(!empty($_POST)) {
+
 	//echo'<pre>';print_r($_POST);echo '</pre>';exit();
 	if ($_POST['nom_'.$_POST['adherentNum'][0]] =='nom'){
 		unset($_POST['nom_'.$_POST['adherentNum'][0]]);
@@ -344,7 +356,7 @@ if(!empty($_POST)) {
 			<th class="title"><?php $plxPlugin->lang('L_ADMIN_LIST_ID'); ?><br/><span class="petit"><?php $plxPlugin->lang('L_ADMIN_DATE_VAL'); ?></span></th>
 			<?php echo $enteteTableau; ?>
 			
-			<th><?php $plxPlugin->lang('L_ADMIN_LIST_CLE') ?></th>
+			<th><?php $plxPlugin->lang('L_ADMIN_ACTION') ?>&nbsp;</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -397,9 +409,7 @@ if(!empty($_POST)) {
 					plxUtils::printSelect('coordonnees_'.$ad->f('id'), array('rec'=>'Accepte la diffusion de ses coordonnées','refus'=>'Refuse la diffusion de ses coordonnées'), plxUtils::strCheck($ad->f('coordonnees')));
 				}
 				plxUtils::printSelect('mailing_'.$ad->f('id'), array('maillist'=>'Accepte les mails','blacklist'=>'Refuse les mails'), plxUtils::strCheck($ad->f('mailing')));
-				echo '</td><td>';
-				plxUtils::printInput('cle_'.$ad->f('id'), plxUtils::strCheck($ad->f('cle')), 'text', '5-'.$plxPlugin->getParam('cle'),false,'clefs');
-				echo '</td></tr>';
+				echo '</td><td style="text-align:left"><a href="plugin.php?p=adhesion&forgetmypass='.base64_encode('true&mail='.$ad->f('mail')).'" title="'.$plxPlugin->getLang('L_ADMIN_SEND_PASS').'"><span style="font-size:3em;">&#9993;</span></a></td></tr>';
 				}
 			}
 			if ($num == 0) {

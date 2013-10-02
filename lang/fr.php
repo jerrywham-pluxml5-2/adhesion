@@ -183,6 +183,9 @@ $LANG                              = array(
 'L_TAB_ACTIVITIES'                 => 'Quelles sont les activités possible ?',
 'L_LABEL_FIND'                     => 'Rechercher adhérent',
 'L_LABEL_DELETE_FILTER'            => 'Supprimer le filtre',
+'L_PASS_SENT'					   => 'Mot de passe envoyé',
+'L_ADMIN_SEND_PASS'				   => 'Renvoyer MP',
+'L_ADMIN_ACTION'				   => 'Action',
 
 # LookArticles
 'L_HIDE_LOCKED_ARTICLES'           =>	'Masquer les articles protégés par un mot de passe de la home page',
