@@ -2,7 +2,7 @@
 /**
  * Plugin adhesion
  *
- * @version	1.2
+ * @version	1.3
  * @date	02/10/2013
  * @author	Stephane F, Cyril MAGUIRE
  **/
