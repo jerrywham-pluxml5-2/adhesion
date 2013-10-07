@@ -2,8 +2,8 @@
 /**
  * Plugin adhesion
  *
- * @version	1.4
- * @date	02/10/2013
+ * @version	1.5
+ * @date	07/10/2013
  * @author	Stephane F, Cyril MAGUIRE
  **/
 class adhesion extends plxPlugin {
@@ -2250,7 +2250,7 @@ class adhesion extends plxPlugin {
 		foreach ($listPass as $k => $v) {
 
 			$logInBase = str_replace(array('-','_'),'',plxUtils::title2url(strtolower($v['nom'].$v['prenom'] )));
-			
+
 			if (sha1($v['salt'].$pw) == $v['pass'] && $login == $logInBase ) {
 				$_SESSION['account'] = plxUtils::charAleatoire(5).md5($v['mail']).plxUtils::charAleatoire(3);
 				$_SESSION['domainAd'] = $this->session_domain;
@@ -2340,7 +2340,7 @@ class adhesion extends plxPlugin {
     }
 
 	/**
-	 * Méthode qui ajoute le champs 'mot de passe' dans l'édition de l'article
+	 * Méthode qui ajoute le champ 'mot de passe' dans l'édition de l'article
 	 *
 	 * @return	stdio
 	 * @author	Rockyhorror
@@ -2433,7 +2433,7 @@ END;
     public function plxMotorPreChauffageEnd() {
 		$plxMotor = plxMotor::getInstance();
 
-		if($plxMotor->mode != 'article' && $plxMotor->mode != 'categorie') {
+		if($plxMotor->mode != 'article' && $plxMotor->mode != 'categorie' && $plxMotor->mode != 'archives' && $plxMotor->mode != 'tags') {
 			if($this->getParam('hide_l_categories')) {
 				$this->hideComs();
 				$this->hideArts();
@@ -2486,6 +2486,28 @@ END;
 				//if(!isset($_SESSION['lockArticles']['categorie'][$plxMotor->cible])) {
 				if(!isset($_SESSION['lockArticles']['categorie'])) {
 					$plxMotor->mode = 'categories_password';
+				}
+			}
+		}
+		elseif($plxMotor->mode == 'archives') {
+			$plxMotor->getArticles();
+			foreach ($plxMotor->plxRecord_arts->result as $key => $art) {
+				$cat_id = explode(',',$art['categorie']);
+				foreach ($cat_id as $key => $value) {
+					if(!empty($plxMotor->aCats[$value]['password']) && !isset($_SESSION['lockArticles']['categorie'])) {
+						$plxMotor->mode = 'home';
+					}
+				}
+			}
+		}
+		elseif($plxMotor->mode == 'tags') {
+			$plxMotor->getArticles();
+			foreach ($plxMotor->plxRecord_arts->result as $key => $art) {
+				$cat_id = explode(',',$art['categorie']);
+				foreach ($cat_id as $key => $value) {
+					if(!empty($plxMotor->aCats[$value]['password']) && !isset($_SESSION['lockArticles']['categorie'])) {
+						$plxMotor->mode = 'home';
+					}
 				}
 			}
 		}
