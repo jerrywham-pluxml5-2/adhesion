@@ -2,8 +2,8 @@
 /**
  * Plugin adhesion
  *
- * @version	1.4
- * @date	02/10/2013
+ * @version	1.5
+ * @date	07/10/2013
  * @author	Stephane F, Cyril MAGUIRE
  **/
  if(!defined('PLX_ROOT')) exit;
