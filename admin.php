@@ -9,7 +9,7 @@
 
 if(!defined('PLX_ROOT')) exit; 
 
-$plxMotor = plxMotor::getInstance();
+$plxMotor = $plxPlugin->plxMotor;
 
 # Control du token du formulaire
 plxToken::validateFormToken($_POST);

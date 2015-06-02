@@ -476,7 +476,7 @@ class adhesion extends plxPlugin {
 	 * @author	Stephane F, Cyril MAGUIRE
 	 **/
     public function plxShowStaticListEnd() {
-    	$plxMotor = plxMotor::getInstance();
+    	$plxMotor = $this->plxMotor;
     		echo "<?php \$class = (\$this->plxMotor->mode=='adhesion' || \$this->plxMotor->mode=='adherer' || \$this->plxMotor->mode=='annuaire')?'active':'noactive'; ?>";
 			echo "<?php \$class1 = \$this->plxMotor->mode=='adhesion'?'active':'noactive'; ?>";
 			echo "<?php \$class2 = \$this->plxMotor->mode=='adherer'?'active':'noactive'; ?>";
@@ -618,7 +618,7 @@ class adhesion extends plxPlugin {
 		# Impression de la liste des adhérents
 		if (isset($_GET['print'])) {
 
-			$plxMotor = plxMotor::getInstance();
+			$plxMotor = $this->plxMotor;
 			$this->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
 
 			# Inclusion des librairies de TBS
@@ -1393,7 +1393,7 @@ class adhesion extends plxPlugin {
 	 * 
 	 */
 	public function cnil($id=0,$mail='',$text=FALSE) {
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 		if ($id == 0 && $mail == '') {
 			if ($text) {
 				return 'Merci de ne pas répondre à cet e-mail. Celui-ci ayant été généré automatiquement, nous ne pourrons traiter votre réponse.'."\n".'
@@ -1661,7 +1661,7 @@ class adhesion extends plxPlugin {
 					if ($content['selection'][0]!='update' && $content['selection'][1]!='update') {
 
 						if ($this->plxRecord_adherents->result[$ad]['validation'] == 1 && $content['choix_'.$id] == 'renouveler') {
-							$plxMotor = plxMotor::getInstance();
+							$plxMotor = $this->plxMotor;
 							$_SESSION['erase'] = '<p id="password_error">'.$this->getLang('L_ERR_USER_ALREADY_VALID').'</p>';
 							header('Location:'.$plxMotor->urlRewrite());
 							exit();
@@ -1855,7 +1855,7 @@ class adhesion extends plxPlugin {
 				
 				unset($content);
 			} else {
-				$plxMotor = plxMotor::getInstance();
+				$plxMotor = $this->plxMotor;
 				if ($plxMotor->mode == 'static') {
 					$_SESSION['erase'] = '<p id="password_error">'.$this->getLang('L_ERR_USER_ALREADY_USED').'</p>';
 					header('Location:'.$plxMotor->urlRewrite());
@@ -2392,7 +2392,7 @@ class adhesion extends plxPlugin {
 	 * @author	Rockyhorror
 	 **/
 	public function showIconIfLock() {
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 
 		$artPassword = $plxMotor->plxRecord_arts->f('password');
 		if(!empty($artPassword)){
@@ -2410,7 +2410,7 @@ END;
 	 * @author Cyril MAGUIRE
 	 */
 	private function hideComs() {
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 		
 		foreach($plxMotor->plxGlob_coms->aFiles as $key => $comFilename) {
 			$fileInfo = $plxMotor->comInfoFromFilename($comFilename);
@@ -2431,7 +2431,7 @@ END;
 	 * @author Cyril MAGUIRE
 	 */
 	private function hideArts($catId='') {
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 		
 		foreach($plxMotor->plxGlob_arts->aFiles as $key => $artFilename){
 			$fileInfo = $plxMotor->artInfoFromFilename($artFilename);
@@ -2456,7 +2456,7 @@ END;
 	 * @author	Cyril MAGUIRE
 	 **/
     public function plxMotorPreChauffageEnd() {
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 
 		if($plxMotor->mode != 'article' && $plxMotor->mode != 'categorie' && $plxMotor->mode != 'archives' && $plxMotor->mode != 'tags') {
 			if($this->getParam('hide_l_categories')) {
@@ -2545,7 +2545,7 @@ END;
 	 * @author	Cyril MAGUIRE
 	 **/
 	public function plxMotorDemarrageEnd() {
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 
 			//Mot de passe oublié, on renvoie la clé si l'email correspond
 			if(isset($_POST['forgetmypass']) ) {
@@ -2745,7 +2745,7 @@ END;
 	 * @author Cyril MAGUIRE
 	 */
 	public function loginLogout() { //unset($_SESSION['maxtry']);unset($_SESSION['timeout']);
-		$plxMotor = plxMotor::getInstance();
+		$plxMotor = $this->plxMotor;
 		if ((isset($_SESSION['domain']) AND $_SESSION['domain'] == $this->session_domain) || (isset($_SESSION['lockArticles']['categorie']) && $_SESSION['lockArticles']['categorie'] == 'on') || (isset($_SESSION['lockArticles']['articles']) && $_SESSION['lockArticles']['articles'] == 'on') ) {
 			if (isset($_SESSION['timeout']) ) {
 				unset($_SESSION['timeout']);
@@ -3057,7 +3057,7 @@ END;
 	 * @author	Cyril MAGUIRE
 	 **/
 	public function plxMotorDemarrageEndStat(){
-			$plxMotor = plxMotor::getInstance();
+			$plxMotor = $this->plxMotor;
 			if($plxMotor->mode == 'static' || $plxMotor->mode == 'static_password') {
 				if(isset($_POST['lockArticles']) && isset($_POST['password'])) {
 					
