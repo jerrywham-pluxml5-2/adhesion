@@ -221,7 +221,10 @@ if(!empty($_POST)) {
 			$ad = $plxPlugin->plxRecord_adherents;
 				if ($ad->f('validation') == 0) {
 				$ordre = ++$num;
-				if (!array_key_exists($ad->f('activite'),$aActivites)) {
+				
+				if (	!$ad->f('activite')
+					||	!array_key_exists($ad->f('activite'), $aActivites)
+				) {
 					$activite = 'autre';
 					$autre_activite = $ad->f('activite');
 				} else {
@@ -268,7 +271,7 @@ if(!empty($_POST)) {
 				echo '<tr><td colspan="8" style="text-align:center;"><strong>'.$plxPlugin->getLang('L_ADMIN_VALIDATION_PENDING').'</strong></td></tr>';
 			}
 			# On récupère le dernier identifiant
-			$lastId = array_keys($plxPlugin->plxRecord_adherents);
+			$lastId = array_keys($plxPlugin->plxRecord_adherents->result);
 			rsort($lastId);
 		}
 		else {

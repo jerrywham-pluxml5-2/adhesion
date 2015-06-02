@@ -46,6 +46,8 @@ class adhesion extends plxPlugin {
 		$this->setAdminProfil(PROFIL_ADMIN, PROFIL_MANAGER);
 
         # déclaration des hooks
+		$this->addHook('Index', 'Index');
+		
 		$this->addHook('AdminPrepend', 'AdminPrepend');
 		$this->addHook('AdminTopEndHead', 'AdminTopEndHead');
 		$this->addHook('AdminTopBottom', 'AdminTopBottom');
@@ -54,6 +56,7 @@ class adhesion extends plxPlugin {
 		$this->addHook('AdhesionUsersFoot', 'AdhesionUsersFoot');
 		$this->addHook('plxMotorConstructLoadPlugins', 'plxMotorConstructLoadPlugins');
 		$this->addHook('plxMotorConstruct', 'plxMotorConstruct');
+		
 		if(plxUtils::checkMail($this->getParam('email'))) {
 			$this->addHook('plxMotorPreChauffageBegin', 'plxMotorPreChauffageBegin');
 			$this->addHook('plxShowConstruct', 'plxShowConstruct');
@@ -97,11 +100,8 @@ class adhesion extends plxPlugin {
 			$this->addHook('plxShowPageTitle', 'plxShowPageTitleStat');
 			$this->addHook('ThemeEndHead', 'ThemeEndHeadStat');
 		}
-		$plxMotor = plxMotor::getInstance();
-		$this->isGutumaActivated = $plxMotor->plxPlugins->aPlugins['gutuma'];
-		if(is_object($this->isGutumaActivated)) {
-			$this->isGutumaActivated = true;
-		}
+		
+
 		# On récupère l'ensemble des adhérents
 		$this->plxGlob_adherents = plxGlob::getInstance(PLX_ROOT.$this->getParam('adherents').'adhesions',false,true,'arts');
 		$this->adherentsList = array_flip(array_keys($this->plxGlob_adherents->aFiles));
@@ -113,53 +113,7 @@ class adhesion extends plxPlugin {
 		$htaccess .= "deny from all\n";
 		$htaccess .= "</Files>\n";
 		$htaccess .= "Options -Indexes\n";
-
-
-		if ($this->isGutumaActivated) {
-
-			# Emplacement des listes de diffusion de Gutuma
-			if ($plxMotor->plxPlugins->aPlugins['gutuma']->listsDir != null)
-				$this->GutumaListsDir = $plxMotor->plxPlugins->aPlugins['gutuma']->listsDir;
-			else
-				$this->GutumaListsDir = PLX_ROOT.'data/gutuma';
-
-		# Récupération des listes des anciennes versions de Gutuma
-		if (is_dir(PLX_PLUGINS.'gutuma/news/lists')) {
-			@rename(PLX_PLUGINS.'gutuma/news/lists', $this->GutumaListsDir);
-			touch($this->GutumaListsDir.'/.htaccess');
-			file_put_contents($this->GutumaListsDir.'/.htaccess', $htaccess);
-		}
-		# Récupération de la config des anciennes versions de Gutuma
-		if (is_file(PLX_PLUGINS.'gutuma/news/inc/config.php')) {
-			@mkdir($this->GutumaListsDir.'/inc');
-			@rename(PLX_PLUGINS.'gutuma/news/inc/config.php', $this->GutumaListsDir.'/inc/config.php');
-			touch($this->GutumaListsDir.'/inc/.htaccess');
-			file_put_contents($this->GutumaListsDir.'/inc/.htaccess', $htaccess);
-		}
 		
-
-
-			# On récupère les paramètres de la liste de diffusion
-			$list = $this->getAllGutumaLists(TRUE);
-
-			$k = 0;
-			foreach ($list as $key => $value) {
-				if ($value['name'] == 'adherents') {
-					$k = $key;
-				}
-			}
-			if (isset($list[$k])) {
-				$this->id = $list[$k]['id'];
-				$this->name = $list[$k]['name'];
-				$this->private = $list[$k]['private'];
-				$this->addresses = $list[$k]['addresses'];
-				$this->listDiff = $list[$k]['addresses'];
-			}
-		}
-		
-		if ($this->id != ''){
-			$this->ok = TRUE;
-		}
     }
 
     ///////////////////////////////////////////////////////////
@@ -170,7 +124,7 @@ class adhesion extends plxPlugin {
 
     public function plxMotorConstructLoadPlugins() {
     	$string = "
-    	\$this->plxGlob_adherents = plxGlob::getInstance(PLX_ROOT.$this->getParam('adherents').'adhesions',false,true,'arts');
+    	\$this->plxGlob_adherents = plxGlob::getInstance(PLX_ROOT.'{$this->getParam('adherents')}'.'adhesions',false,true,'arts');
 		\$this->adherentsList = array_flip(array_keys(\$this->plxGlob_adherents->aFiles));";
 		echo "<?php".$string."?>";
     }
@@ -451,29 +405,32 @@ class adhesion extends plxPlugin {
 	 **/
     public function plxMotorPreChauffageBegin() {
     	$content = array();//echo strtotime("20 October 2011");exit();
-    	foreach ($this->plxRecord_adherents->result as $i => $value) {
-    		if ($value['validation'] == 1) {
-	    		if ($this->getParam('annee') == 'civile') {
-					$datetimeOld = date('Y',$value['date']);
-		    		//(60*60*24*365) = 31536000 secondes soit 1 an
-		    		$datetimeNew = strtotime('01 January '.($datetimeOld+1).' 00:00:01' );
-				}
-				if ($this->getParam('annee') == 'entiere') {
-					$datetimeOld = $value['date'];
-		    		//(60*60*24*365) = 31536000 secondes soit 1 an
-		    		$datetimeNew = $datetimeOld+365*24*60*60;
-				}
-				if ( $datetimeNew < time() ){
-	    			foreach ($value as $key => $v) {
-	    				$content[$key.'_'.$value['id']] = $v;
-	    			}
-					$content['validation_'.$value['id']] = 0;
-					$content['idAdherent'] = array($value['id']);
-					$this->editAdherentslist($content,$value['id'],TRUE);
+		
+		if (isset($this->plxRecord_adherents->result)) {
+			foreach ($this->plxRecord_adherents->result as $i => $value) {
+				if ($value['validation'] == 1) {
+					if ($this->getParam('annee') == 'civile') {
+						$datetimeOld = date('Y',$value['date']);
+						//(60*60*24*365) = 31536000 secondes soit 1 an
+						$datetimeNew = strtotime('01 January '.($datetimeOld+1).' 00:00:01' );
+					}
+					if ($this->getParam('annee') == 'entiere') {
+						$datetimeOld = $value['date'];
+						//(60*60*24*365) = 31536000 secondes soit 1 an
+						$datetimeNew = $datetimeOld+365*24*60*60;
+					}
+					if ( $datetimeNew < time() ){
+						foreach ($value as $key => $v) {
+							$content[$key.'_'.$value['id']] = $v;
+						}
+						$content['validation_'.$value['id']] = 0;
+						$content['idAdherent'] = array($value['id']);
+						$this->editAdherentslist($content,$value['id'],TRUE);
+					}
 				}
 			}
-    	}
-
+		}
+		
 		$template = $this->getParam('template')==''?'static.php':$this->getParam('template');
 
 		$string = "
@@ -584,6 +541,67 @@ class adhesion extends plxPlugin {
 		echo "\t</url>\n";
 		?>';
 	}
+	
+	public function chargeGutuma() {
+		
+		$this->isGutumaActivated = (
+				isset($this->plxMotor->plxPlugins->aPlugins['gutuma'])
+			&&	is_object($this->plxMotor->plxPlugins->aPlugins['gutuma'])
+		);
+		
+		if ($this->isGutumaActivated) {
+
+			# Emplacement des listes de diffusion de Gutuma
+			if ($this->plxMotor->plxPlugins->aPlugins['gutuma']->listsDir != null)
+				$this->GutumaListsDir = $this->plxMotor->plxPlugins->aPlugins['gutuma']->listsDir;
+			else
+				$this->GutumaListsDir = PLX_ROOT.'data/gutuma';
+
+			# Récupération des listes des anciennes versions de Gutuma
+			if (is_dir(PLX_PLUGINS.'gutuma/news/lists')) {
+				@rename(PLX_PLUGINS.'gutuma/news/lists', $this->GutumaListsDir);
+				touch($this->GutumaListsDir.'/.htaccess');
+				file_put_contents($this->GutumaListsDir.'/.htaccess', $htaccess);
+			}
+			# Récupération de la config des anciennes versions de Gutuma
+			if (is_file(PLX_PLUGINS.'gutuma/news/inc/config.php')) {
+				@mkdir($this->GutumaListsDir.'/inc');
+				@rename(PLX_PLUGINS.'gutuma/news/inc/config.php', $this->GutumaListsDir.'/inc/config.php');
+				touch($this->GutumaListsDir.'/inc/.htaccess');
+				file_put_contents($this->GutumaListsDir.'/inc/.htaccess', $htaccess);
+			}
+		
+
+
+			# On récupère les paramètres de la liste de diffusion
+			$list = $this->getAllGutumaLists(TRUE);
+
+			$k = 0;
+			foreach ($list as $key => $value) {
+				if ($value['name'] == 'adherents') {
+					$k = $key;
+				}
+			}
+			if (isset($list[$k])) {
+				$this->id = $list[$k]['id'];
+				$this->name = $list[$k]['name'];
+				$this->private = $list[$k]['private'];
+				$this->addresses = $list[$k]['addresses'];
+				$this->listDiff = $list[$k]['addresses'];
+			}
+		}
+		
+		if ($this->id != ''){
+			$this->ok = TRUE;
+		}
+	}
+	
+	
+	public function Index() {
+		$this->plxMotor = plxMotor::getInstance();
+		$this->chargeGutuma();
+	}
+	
 
 	/**
 	 * Méthode permettant l'export de la liste des adhérents
@@ -592,6 +610,10 @@ class adhesion extends plxPlugin {
 	 * @author Cyril MAGUIRE
 	 */
 	public function AdminPrepend() {
+		
+		$this->plxMotor = plxAdmin::getInstance();
+		$this->chargeGutuma();
+		
 
 		# Impression de la liste des adhérents
 		if (isset($_GET['print'])) {
@@ -2099,20 +2121,23 @@ class adhesion extends plxPlugin {
 	 * @author Cyril MAGUIRE
 	 */
 	public function isAlreadyExists($adherent,$id) {
-		$verif = $this->plxRecord_adherents->result;
+		
 		$search['nom'] = strtolower($adherent['nom_'.$id]);
 		$search['prenom'] = strtolower($adherent['prenom_'.$id]);
 		$search['ville'] = strtolower($adherent['ville_'.$id]);
 		$search['mail'] = $adherent['mail_'.$id];
 		
-		foreach ($verif as $index => $data) {
-			if ($search['mail'] == $data['mail']) {
-				return TRUE;
-			}
-			if ($search['nom'] == strtolower($data['nom']) && $search['prenom'] == strtolower($data['prenom']) && $search['ville'] == strtolower($data['ville'])) {
-				return TRUE;
+		if (isset($this->plxRecord_adherents->result)) {
+			foreach ($this->plxRecord_adherents->result as $index => $data) {
+				if ($search['mail'] == $data['mail']) {
+					return TRUE;
+				}
+				if ($search['nom'] == strtolower($data['nom']) && $search['prenom'] == strtolower($data['prenom']) && $search['ville'] == strtolower($data['ville'])) {
+					return TRUE;
+				}
 			}
 		}
+		
 		return FALSE;
 	}
 
