@@ -2563,195 +2563,206 @@ END;
 	public function plxMotorDemarrageEnd() {
 		
 		$plxMotor = $this->plxMotor;
+		
+		//Mot de passe oublié, on renvoie la clé si l'email correspond
+		if(isset($_POST['forgetmypass']) ) {
+			if($this->retrieveMyPass(plxUtils::strCheck($_POST['email']) )) {
+				$_SESSION['retrievePass'] = '<p id="password_success">'.$this->getLang('L_EMAIL_PASS_OK').'</p>';
+				header('Location:'.$plxMotor->urlRewrite() );
+				exit();
+			} else {
+				echo '<p id="password_error">'.$this->getLang('L_EMAIL_PASS_KO').'</p>';
+			}
+		}
+		
+		//Déconnexion
+		if(isset($_POST['logout'])) {
+			//On supprime les index de session
+			unset($_SESSION['lockArticles']);
+			unset($_SESSION['account']);
+			unset($_SESSION['domainAd']);
 
-			//Mot de passe oublié, on renvoie la clé si l'email correspond
-			if(isset($_POST['forgetmypass']) ) {
-				if($this->retrieveMyPass(plxUtils::strCheck($_POST['email']) )) {
-					$_SESSION['retrievePass'] = '<p id="password_success">'.$this->getLang('L_EMAIL_PASS_OK').'</p>';
+			$_SESSION['logout'] = $this->getlang('L_DECONNEXION_OK');
+			if (isset($_SESSION['referer'])){
+				header('Location:'.$_SESSION['referer']);
+				unset($_SESSION['referer']);
+				exit();
+			} else {
+				if (isset($_SERVER['QUERY_STRING']) ) {
+					header('Location:'.$plxMotor->urlRewrite('?'.$_SERVER['QUERY_STRING']) );
+					exit();
+				} else {
 					header('Location:'.$plxMotor->urlRewrite() );
 					exit();
-				} else {
-					echo '<p id="password_error">'.$this->getLang('L_EMAIL_PASS_KO').'</p>';
 				}
 			}
-			//Déconnexion
-			if(isset($_POST['logout'])) {
-				//On supprime les index de session
-				unset($_SESSION['lockArticles']);
-				unset($_SESSION['account']);
-				unset($_SESSION['domainAd']);
+		}
 
-				$_SESSION['logout'] = $this->getlang('L_DECONNEXION_OK');
-				if (isset($_SESSION['referer'])){
-					header('Location:'.$_SESSION['referer']);
-					unset($_SESSION['referer']);
-					exit();
-				} else {
-					if (isset($_SERVER['QUERY_STRING']) ) {
-						header('Location:'.$plxMotor->urlRewrite('?'.$_SERVER['QUERY_STRING']) );
-						exit();
-					} else {
-						header('Location:'.$plxMotor->urlRewrite() );
-						exit();
-					}
-				}
-			}
+		//Définition du domaine initial
+		$this->session_domain = str_replace('plugins/adhesion','',dirname(__FILE__));
 
-			//Définition du domaine initial
-			$this->session_domain = str_replace('plugins/adhesion','',dirname(__FILE__));
-
-			//Si le mode est protégé, on affiche le message de connexion, sinon on affiche la page normalement
-			switch ($plxMotor->mode) {
-						case 'article_password':
-						case 'categorie_password':
-						case 'categories_password':
-						case 'annuaire':
-						$showForm = TRUE;
-						break;
-						case 'home':
-						$protectedCats = array();
-						foreach($plxMotor->plxGlob_arts->aFiles as $key => $artFilename){
-							$fileInfo = $plxMotor->artInfoFromFilename($artFilename);
-							$cats = explode(',', $fileInfo['catId']);
-							$catPassword = '';
-							foreach ($cats as $k => $value) {
-								if ($plxMotor->aCats[$value]['password'] == 'on') {
-									$catPassword = $plxMotor->aCats[$value]['password'];
-									if($catPassword == 'on') {
-										$protectedCats[] = $fileInfo['catId'];
-									}
-									$catPassword = '';
-								}
-							}
-						}
-						if (!isset($_SESSION['lockArticles']['categorie'])) {
-							foreach ($plxMotor->plxRecord_arts->result as $k => $data) {
-								if (in_array($data['categorie'],$protectedCats) ) {
-									$plxMotor->plxRecord_arts->result[$k]['chapo'] = '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
-									$plxMotor->plxRecord_arts->result[$k]['allow_com'] = 0;
-									$plxMotor->plxRecord_arts->result[$k]['content'] = '';
-								}
-								if ($data['password'] == 'on' ) {
-									$plxMotor->plxRecord_arts->result[$k]['chapo'] = '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
-									$plxMotor->plxRecord_arts->result[$k]['allow_com'] = 0;
-									$plxMotor->plxRecord_arts->result[$k]['content'] = '';
-								}
-							}
-						}
-						$showForm = FALSE;
-						break;
-						default:
-						$showForm = FALSE;
-						break;
-			}
-
-			//echo $plxMotor->mode;exit();
-			//Vérification de la connexion
-			if(isset($_POST['lockArticles']) && isset($_POST['login']) && isset($_POST['password'])) {
-				
-				$pw = md5($_POST['password']);
-				
-				if($this->verifPass($pw,plxUtils::strCheck($_POST['login']))) {
-					
-					$_SESSION['lockArticles']['articles'] = $_SESSION['lockArticles']['categorie'] = 'on';
-					$_SESSION['lockArticles']['success'] = $this->getlang('L_PLUGIN_GOOD_PASSWORD');
-					$showForm = FALSE;
-
-					switch ($plxMotor->mode) {
-						case 'article_password':
-							$url = $plxMotor->urlRewrite('?article'.intval($plxMotor->plxRecord_arts->f('numero')).'/'.$plxMotor->plxRecord_arts->f('url'));
-							break;
-						case 'categorie_password':
-							$url = $plxMotor->urlRewrite('?article'.intval($plxMotor->plxRecord_arts->f('numero')).'/'.$plxMotor->plxRecord_arts->f('url'));
-							break;
-						case 'categories_password':
-							$url = $plxMotor->urlRewrite('?categorie'.intval($plxMotor->cible).'/'.$plxMotor->aCats[$plxMotor->cible]['url']);
-							break;
-						case 'annuaire':
-							$url = $plxMotor->urlRewrite('?annuaire');
-							break;
-						case 'categorie':
-						case 'home':
-							if ($plxMotor->mode == 'categorie') {
-								$url = $plxMotor->urlRewrite('?article'.intval($plxMotor->plxRecord_arts->f('numero')).'/'.$plxMotor->plxRecord_arts->f('url'));
-							} else {
-								$url = $plxMotor->urlRewrite();
-							}
-							foreach ($plxMotor->plxRecord_arts->result as $key => $value) {
-								if(isset($value['password']) && $value['password'] == 'on' && !isset($_SESSION['lockArticles']['categorie']) && !isset($_SESSION['lockArticles']['articles']) ) {
-									//On modifie le contenu de l'article
-									$a = array(); 
-									$a['content'] =  '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
-									$a['allow_com'] = 0;
-									$a['chapo'] = '';
-
-									$plxMotor->plxRecord_arts->result[$key] = array_merge($plxMotor->plxRecord_arts->result[$key], $a);
-								}
-							}
-							break;
-					}//Fin du switch	
-
-					header('Location: '.$url);
-					exit;
-				}
-				else {
-					if (isset($_SESSION['maxtry']) && $_SESSION['maxtry'] >= 3) {
-						$_SESSION['erase'] = '<p id="password_error">'.$this->getlang('L_PLUGIN_MAXTRY').'&nbsp;'.date('H\hi',$_SESSION['timeout']).'</p>';
-					} else {
-						$_SESSION['lockArticles']['error'] = $this->getlang('L_PLUGIN_BAD_PASSWORD');
-					}
-				}
-			}
-			
-			if (isset($_SESSION['domainAd']) && $_SESSION['domainAd'] != $this->session_domain) {
+		//Si le mode est protégé, on affiche le message de connexion, sinon on affiche la page normalement
+		
+		//var_dump($plxMotor->mode);
+		
+		
+		switch ($plxMotor->mode) {
+			case 'article_password':
+			case 'categorie_password':
+			case 'categories_password':
+			case 'annuaire':
 				$showForm = TRUE;
-				unset($_SESSION['domainAd']);
-			}
-
-			if($showForm) {
-				if($plxMotor->mode == 'categories_password') {
-					$plxMotor->template = 'article.php';
-					$a = array(
-					array(
-						'title' => $plxMotor->aCats[$plxMotor->cible]['name'],
-						'allow_com' => 0,
-						'template' => 'article.php',
-						'chapo' => '',
-						//'content' => file_get_contents(PLX_PLUGINS.'adhesion/form.article_password.php'),
-						'content' => '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>',
-						'tags' => '',
-						'meta_description' => '',
-						'meta_keywords' => '',
-						'title_htmltag' => '',
-						'filename' => '',
-						'numero' => '0000',
-						'author' => '000',
-						'categorie' => $plxMotor->cible,
-						'url' => '',
-						'date' => '<br>',//date("c"),
-						'nb_com' => 0,
-						)
-					);
-
-					$plxMotor->plxRecord_arts = new plxRecord($a);
-				}
-				else {
-					$a = array(); 
-					$a['content'] =  '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
-					if(isset($_SESSION['lockArticles']['error'])) {
-						$a['content'] .= '<p class="static_password_error">'.$_SESSION['lockArticles']['error'].'</p>';
-						unset($_SESSION['lockArticles']['error']);
-					}
-					$a['allow_com'] = 0;
-					$a['chapo'] = '';
-					if($plxMotor->plxRecord_arts) {
-						$plxMotor->plxRecord_arts->result[0] = array_merge($plxMotor->plxRecord_arts->result[0], $a);
-						if ($plxMotor->mode != 'annuaire') {
-							$plxMotor->template = $plxMotor->plxRecord_arts->f('template');
+				break;
+			
+			case 'home':
+			case 'categorie':
+			case 'tags':
+				$protectedCats = array();
+				foreach($plxMotor->plxGlob_arts->aFiles as $key => $artFilename){
+					$fileInfo = $plxMotor->artInfoFromFilename($artFilename);
+					$cats = explode(',', $fileInfo['catId']);
+					$catPassword = '';
+					foreach ($cats as $k => $value) {
+						if (	isset($plxMotor->aCats[$value])
+							&&	($plxMotor->aCats[$value]['password'] == 'on')
+						) {
+							$catPassword = $plxMotor->aCats[$value]['password'];
+							if($catPassword == 'on') {
+								$protectedCats[] = $fileInfo['catId'];
+							}
+							$catPassword = '';
 						}
 					}
 				}
+				if (!isset($_SESSION['lockArticles']['categorie'])) {
+					foreach ($plxMotor->plxRecord_arts->result as $k => $data) {
+						if (in_array($data['categorie'],$protectedCats) ) {
+							$plxMotor->plxRecord_arts->result[$k]['chapo'] = '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
+							$plxMotor->plxRecord_arts->result[$k]['allow_com'] = 0;
+							$plxMotor->plxRecord_arts->result[$k]['content'] = '';
+						}
+						if ($data['password'] == 'on' ) {
+							$plxMotor->plxRecord_arts->result[$k]['chapo'] = '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
+							$plxMotor->plxRecord_arts->result[$k]['allow_com'] = 0;
+							$plxMotor->plxRecord_arts->result[$k]['content'] = '';
+						}
+					}
+				}
+				$showForm = FALSE;
+				break;
+			
+			default:
+				$showForm = FALSE;
+				break;
+		} // FIN switch ($plxMotor->mode) {
+
+		//echo $plxMotor->mode;exit();
+		//Vérification de la connexion
+		if(isset($_POST['lockArticles']) && isset($_POST['login']) && isset($_POST['password'])) {
+			
+			$pw = md5($_POST['password']);
+			
+			if($this->verifPass($pw,plxUtils::strCheck($_POST['login']))) {
+				
+				$_SESSION['lockArticles']['articles'] = $_SESSION['lockArticles']['categorie'] = 'on';
+				$_SESSION['lockArticles']['success'] = $this->getlang('L_PLUGIN_GOOD_PASSWORD');
+				$showForm = FALSE;
+
+				switch ($plxMotor->mode) {
+					case 'article_password':
+						$url = $plxMotor->urlRewrite('?article'.intval($plxMotor->plxRecord_arts->f('numero')).'/'.$plxMotor->plxRecord_arts->f('url'));
+						break;
+					case 'categorie_password':
+						$url = $plxMotor->urlRewrite('?article'.intval($plxMotor->plxRecord_arts->f('numero')).'/'.$plxMotor->plxRecord_arts->f('url'));
+						break;
+					case 'categories_password':
+						$url = $plxMotor->urlRewrite('?categorie'.intval($plxMotor->cible).'/'.$plxMotor->aCats[$plxMotor->cible]['url']);
+						break;
+					case 'annuaire':
+						$url = $plxMotor->urlRewrite('?annuaire');
+						break;
+					case 'categorie':
+					case 'home':
+						if ($plxMotor->mode == 'categorie') {
+							$url = $plxMotor->urlRewrite('?article'.intval($plxMotor->plxRecord_arts->f('numero')).'/'.$plxMotor->plxRecord_arts->f('url'));
+						} else {
+							$url = $plxMotor->urlRewrite();
+						}
+						foreach ($plxMotor->plxRecord_arts->result as $key => $value) {
+							if(isset($value['password']) && $value['password'] == 'on' && !isset($_SESSION['lockArticles']['categorie']) && !isset($_SESSION['lockArticles']['articles']) ) {
+								//On modifie le contenu de l'article
+								$a = array(); 
+								$a['content'] =  '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
+								$a['allow_com'] = 0;
+								$a['chapo'] = '';
+
+								$plxMotor->plxRecord_arts->result[$key] = array_merge($plxMotor->plxRecord_arts->result[$key], $a);
+							}
+						}
+						break;
+				}//Fin du switch	
+
+				header('Location: '.$url);
+				exit;
 			}
+			else {
+				if (isset($_SESSION['maxtry']) && $_SESSION['maxtry'] >= 3) {
+					$_SESSION['erase'] = '<p id="password_error">'.$this->getlang('L_PLUGIN_MAXTRY').'&nbsp;'.date('H\hi',$_SESSION['timeout']).'</p>';
+				} else {
+					$_SESSION['lockArticles']['error'] = $this->getlang('L_PLUGIN_BAD_PASSWORD');
+				}
+			}
+		}
+		
+		if (isset($_SESSION['domainAd']) && $_SESSION['domainAd'] != $this->session_domain) {
+			$showForm = TRUE;
+			unset($_SESSION['domainAd']);
+		}
+
+		if($showForm) {
+			if($plxMotor->mode == 'categories_password') {
+				$plxMotor->template = 'article.php';
+				$a = array(
+				array(
+					'title' => $plxMotor->aCats[$plxMotor->cible]['name'],
+					'allow_com' => 0,
+					'template' => 'article.php',
+					'chapo' => '',
+					//'content' => file_get_contents(PLX_PLUGINS.'adhesion/form.article_password.php'),
+					'content' => '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>',
+					'tags' => '',
+					'meta_description' => '',
+					'meta_keywords' => '',
+					'title_htmltag' => '',
+					'filename' => '',
+					'numero' => '0000',
+					'author' => '000',
+					'categorie' => $plxMotor->cible,
+					'url' => '',
+					'date' => '<br>',//date("c"),
+					'nb_com' => 0,
+					)
+				);
+
+				$plxMotor->plxRecord_arts = new plxRecord($a);
+			}
+			else {
+				$a = array(); 
+				$a['content'] =  '<p class="locked">'.$this->getLang('L_NEED_AUTH').'</p>';
+				if(isset($_SESSION['lockArticles']['error'])) {
+					$a['content'] .= '<p class="static_password_error">'.$_SESSION['lockArticles']['error'].'</p>';
+					unset($_SESSION['lockArticles']['error']);
+				}
+				$a['allow_com'] = 0;
+				$a['chapo'] = '';
+				if($plxMotor->plxRecord_arts) {
+					$plxMotor->plxRecord_arts->result[0] = array_merge($plxMotor->plxRecord_arts->result[0], $a);
+					if ($plxMotor->mode != 'annuaire') {
+						$plxMotor->template = $plxMotor->plxRecord_arts->f('template');
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -2879,13 +2890,20 @@ END;
 	 * @author Cyril MAGUIRE
 	 */
 	public function plxFeedPreChauffageEnd() {
-
+		
 		$plxFeed = plxFeed::getInstance();
+		
 		
 		if ($plxFeed->mode == 'article') {
 			foreach($plxFeed->plxGlob_arts->aFiles as $key => $artFilename){
 				$fileInfo = $plxFeed->artInfoFromFilename($artFilename);
-				$catPassword = $plxFeed->aCats[$fileInfo['catId']]['password'];
+				
+				if (!isset($plxFeed->aCats[$fileInfo['catId']])) {
+					$catPassword = NULL;
+				} else {
+					$catPassword = $plxFeed->aCats[$fileInfo['catId']]['password'];
+				}
+				
 				if(!empty($catPassword)) {
 					unset ($plxFeed->plxGlob_arts->aFiles[$key]);
 				}
@@ -2896,9 +2914,24 @@ END;
 			foreach($plxFeed->plxGlob_coms->aFiles as $key => $comFilename) {
 				$fileInfo = $plxFeed->comInfoFromFilename($comFilename);
 				$artInfo = $plxFeed->artInfoFromFilename($plxFeed->plxGlob_arts->aFiles[$fileInfo['artId']]);
-				$catPassword = $plxFeed->aCats[$artInfo['catId']]['password'];
+				
+
+				$catPassword = NULL;
+				
+				if (isset($plxFeed->aCats[$artInfo['catId']])) {
+					$catPassword = $plxFeed->aCats[$artInfo['catId']]['password'];
+				}
+				
+				
+				if(empty($catPassword)) {
+					$a = $plxFeed->parseArticle(PLX_ROOT.$plxFeed->aConf['racine_articles']
+							. $plxFeed->plxGlob_arts->aFiles[$fileInfo['artId']]);
+					
+					$catPassword = $a['password'];
+				}
+				
 				if(!empty($catPassword)) {
-					unset ($plxFeed->plxGlob_coms->aFiles[$key]);					
+					unset($plxFeed->plxGlob_coms->aFiles[$key]);
 				}
 			}
 		}
