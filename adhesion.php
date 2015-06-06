@@ -67,6 +67,7 @@ class adhesion extends plxPlugin {
 			$this->addHook('SitemapStatics', 'SitemapStatics');
 
 			# Déclarations des hooks pour sécuriser les articles
+			$this->addHook('plxShowLastComList','plxShowLastComList');
 			$this->addHook('AdminArticleSidebar','AdminArticleSidebar');
 			$this->addHook('plxAdminEditArticleXml','plxAdminEditArticleXml');
 			$this->addHook('plxMotorParseArticle','plxMotorParseArticle');
@@ -127,6 +128,40 @@ class adhesion extends plxPlugin {
     	\$this->plxPlugins->aPlugins['adhesion']->getAdherents();";
     	echo "<?php".$string."?>";
     }
+	
+	public function plxShowLastComList() {
+		
+		if (isset($_SESSION['account'])) { // si un membre est connecté
+			// pas de filtre
+			return;
+		}
+		
+		foreach ($this->plxMotor->plxGlob_coms->aFiles as $i => $f) {
+			
+			$fileInfo = $this->plxMotor->comInfoFromFilename($f);
+			$artInfo = $this->plxMotor->artInfoFromFilename($this->plxMotor->plxGlob_arts->aFiles[$fileInfo['artId']]);
+			
+			
+			$catPassword = NULL;
+			
+			if (isset($this->plxMotor->aCats[$artInfo['catId']])) {
+				$catPassword = $this->plxMotor->aCats[$artInfo['catId']]['password'];
+			}
+			
+			
+			if(empty($catPassword)) {
+				$a = $this->plxMotor->parseArticle(PLX_ROOT.$this->plxMotor->aConf['racine_articles']
+						. $this->plxMotor->plxGlob_arts->aFiles[$fileInfo['artId']]);
+				
+				$catPassword = $a['password'];
+			}
+			
+			if(!empty($catPassword)) {
+				unset($this->plxMotor->plxGlob_coms->aFiles[$i]);
+			}
+		}
+		
+	}
 
     /**
 	 * Méthode qui préconfigure le plugin
@@ -2283,7 +2318,7 @@ class adhesion extends plxPlugin {
 		if(isset($_SESSION['maxtry']) && $_SESSION['maxtry'] >= 2) {
 			$_SESSION['timeout'] = time() + (60*15);
 		}
-
+		
 		$error = false;
 		foreach ($listPass as $k => $v) {
 
@@ -2603,8 +2638,6 @@ END;
 
 		//Si le mode est protégé, on affiche le message de connexion, sinon on affiche la page normalement
 		
-		//var_dump($plxMotor->mode);
-		
 		
 		switch ($plxMotor->mode) {
 			case 'article_password':
@@ -2915,7 +2948,7 @@ END;
 				$fileInfo = $plxFeed->comInfoFromFilename($comFilename);
 				$artInfo = $plxFeed->artInfoFromFilename($plxFeed->plxGlob_arts->aFiles[$fileInfo['artId']]);
 				
-
+				
 				$catPassword = NULL;
 				
 				if (isset($plxFeed->aCats[$artInfo['catId']])) {
