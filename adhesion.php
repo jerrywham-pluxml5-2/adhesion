@@ -2638,6 +2638,7 @@ END;
 
 		//Si le mode est protégé, on affiche le message de connexion, sinon on affiche la page normalement
 		
+		//var_dump($plxMotor->mode);
 		
 		switch ($plxMotor->mode) {
 			case 'article_password':
@@ -2650,6 +2651,7 @@ END;
 			case 'home':
 			case 'categorie':
 			case 'tags':
+			case 'archives':
 				$protectedCats = array();
 				foreach($plxMotor->plxGlob_arts->aFiles as $key => $artFilename){
 					$fileInfo = $plxMotor->artInfoFromFilename($artFilename);
@@ -2927,7 +2929,24 @@ END;
 		$plxFeed = plxFeed::getInstance();
 		
 		
-		if ($plxFeed->mode == 'article') {
+		if (in_array($plxFeed->mode, array("tag"))) {
+			print_r($plxFeed->plxGlob_arts->aFiles);
+			
+			foreach($plxFeed->plxGlob_arts->aFiles as $key => $artFilename){
+				$fileInfo = $plxFeed->artInfoFromFilename($artFilename);
+				
+				if (!isset($plxFeed->aCats[$fileInfo['catId']])) {
+					$catPassword = NULL;
+				} else {
+					$catPassword = $plxFeed->aCats[$fileInfo['catId']]['password'];
+				}
+				
+				if(!empty($catPassword)) {
+					unset ($plxFeed->plxGlob_arts->aFiles[$key]);var_dump($key);
+				}
+			}
+		}
+		elseif (in_array($plxFeed->mode, array("article"))) {
 			foreach($plxFeed->plxGlob_arts->aFiles as $key => $artFilename){
 				$fileInfo = $plxFeed->artInfoFromFilename($artFilename);
 				
