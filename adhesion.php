@@ -2325,7 +2325,7 @@ class adhesion extends plxPlugin {
 	}
 
 	public function plxAdminEditCategorie() {
-		echo "<?php \$this->aCats[\$content['id']]['password'] = trim(\$content['password']); ?>";
+		echo "<?php \$this->aCats[\$content['id']]['password'] = !isset(\$content['password']) ? \"\" : trim(\$content['password']); ?>";
 	}
 
 	public function plxMotorGetCategories() {
@@ -2377,7 +2377,10 @@ class adhesion extends plxPlugin {
         }
 
 	public function plxAdminEditArticleXml(){
-		echo "<?php \$xml .= '\t'.'<password><![CDATA['.plxUtils::cdataCheck(trim(\$content['password'])).']]></password>'.'\n'; ?>";
+		echo "<?php
+		\$content['password'] = !isset(\$content['password']) ? \"\" : \$content['password'];
+		\$xml .= '\t'.'<password><![CDATA['.plxUtils::cdataCheck(trim(\$content['password'])).']]></password>'.'\n';
+		?>";
 	}
 
 	public function plxMotorParseArticle(){
