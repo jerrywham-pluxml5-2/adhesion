@@ -122,7 +122,7 @@ if(!empty($_POST) && empty($wall_e)) {
 		# On édite le compte de l'adhérent
 		if ($plxPlugin->editMyAccount($compte,$compte['id'])) {
 			//Si l'utilisateur ne souhaite plus être membre de l'asso, on envoie une notification à un admin
-			if($choix == 'stop') {
+			if($compte['choix'] == 'stop') {
 				$content = $plxPlugin->notification($compte['nom'],$compte['prenom'],$compte['adresse1'],$compte['adresse2'],$compte['cp'],$compte['ville'],$compte['tel'],$compte['mail'],$compte['choix'],$compte['mailing']);
 				if($plxPlugin->sendEmail($plxPlugin->getParam('nom_asso'),$plxPlugin->getParam('email'),$plxPlugin->getParam('email'),$plxPlugin->getParam('devalidation_subject'),$content,'html')){
 						$_SESSION['erase'] = '<p id="password_success">'.$plxPlugin->getLang('L_EDIT_OK').'<br/>'.$plxPlugin->getLang('L_FORM_ERASE_OK').'</p>';
