@@ -101,18 +101,10 @@ class adhesion extends plxPlugin {
 			$this->addHook('ThemeEndHead', 'ThemeEndHeadStat');
 		}
 		
-
+		
 		# On récupère l'ensemble des adhérents
 		$this->plxGlob_adherents = plxGlob::getInstance(PLX_ROOT.$this->getParam('adherents').'adhesions',false,true,'arts');
 		$this->adherentsList = array_flip(array_keys($this->plxGlob_adherents->aFiles));
-
-		$htaccess = "Allow from none\n";
-		$htaccess .= "Deny from all\n";
-		$htaccess .= "<Files *.php>\n";
-		$htaccess .= "order allow,deny\n";
-		$htaccess .= "deny from all\n";
-		$htaccess .= "</Files>\n";
-		$htaccess .= "Options -Indexes\n";
 		
     }
 
@@ -132,7 +124,7 @@ class adhesion extends plxPlugin {
     public function plxMotorConstruct() {
     	$string = "
     	# Récupération des données
-    	\$this->plxPlugins->aPlugins['adhesion']->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');";
+    	\$this->plxPlugins->aPlugins['adhesion']->getAdherents();";
     	echo "<?php".$string."?>";
     }
 
@@ -556,7 +548,16 @@ class adhesion extends plxPlugin {
 				$this->GutumaListsDir = $this->plxMotor->plxPlugins->aPlugins['gutuma']->listsDir;
 			else
 				$this->GutumaListsDir = PLX_ROOT.'data/gutuma';
-
+			
+			
+			$htaccess = "Allow from none\n";
+			$htaccess .= "Deny from all\n";
+			$htaccess .= "<Files *.php>\n";
+			$htaccess .= "order allow,deny\n";
+			$htaccess .= "deny from all\n";
+			$htaccess .= "</Files>\n";
+			$htaccess .= "Options -Indexes\n";
+			
 			# Récupération des listes des anciennes versions de Gutuma
 			if (is_dir(PLX_PLUGINS.'gutuma/news/lists')) {
 				@rename(PLX_PLUGINS.'gutuma/news/lists', $this->GutumaListsDir);
@@ -570,12 +571,12 @@ class adhesion extends plxPlugin {
 				touch($this->GutumaListsDir.'/inc/.htaccess');
 				file_put_contents($this->GutumaListsDir.'/inc/.htaccess', $htaccess);
 			}
-		
-
-
+			
+			
+			
 			# On récupère les paramètres de la liste de diffusion
 			$list = $this->getAllGutumaLists(TRUE);
-
+			
 			$k = 0;
 			foreach ($list as $key => $value) {
 				if ($value['name'] == 'adherents') {
@@ -619,7 +620,7 @@ class adhesion extends plxPlugin {
 		if (isset($_GET['print'])) {
 
 			$plxMotor = $this->plxMotor;
-			$this->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
+			$this->getAdherents();
 
 			# Inclusion des librairies de TBS
 			if (version_compare(PHP_VERSION,'5')<0) {
@@ -1224,8 +1225,12 @@ class adhesion extends plxPlugin {
 	 * @return	boolean	vrai si articles trouvés, sinon faux
 	 * @author	Stéphane F
 	 **/
-	public function getAdherents($motif) {
-
+	public function getAdherents($motif = NULL) {
+		
+		if (!isset($motif)) {
+			$motif = "/^[0-9]{5}\\.[a-z-]+\\.[a-z-]+\\.[0-9]{10}\\.xml$/";
+		}
+		
 		# On fait notre traitement sur notre tri
 		$ordre = $this->mapTri('asc');
 		# On recupere nos fichiers (tries) selon le motif, la pagination, la date de publication
@@ -1373,7 +1378,7 @@ class adhesion extends plxPlugin {
 			# Suppression de l'adhérent
 			if($globAd = $this->plxGlob_adherents->query('/^'.$id.'.(.*).xml$/')) {
 				unlink(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$globAd['0']);
-				$resDelAd = !file_exists(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$globArt['0']);
+				$resDelAd = !is_file(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$globArt['0']);
 			}
 			$_SESSION['info'] = $this->getLang('L_ADMIN_REMOVE_ADH').'<br/>' ;
 			$action = TRUE;
@@ -2243,20 +2248,23 @@ class adhesion extends plxPlugin {
 	 * @author Cyril MAGUIRE
 	 */
 	public function getPasswords() {
-		$pw = null;
-		//print_r($this->adherentsList);
-		foreach ($this->plxRecord_adherents->result as $key => $value) {
-			$pw[] = array(
-				'rand1' => $value['rand1'],
-				'rand2' => $value['rand2'],
-				'cle' => $value['cle'],
-				'mail' => $value['mail'],
-				'salt' => $value['salt'],
-				'pass' => $value['password'],
-				'nom' => $value['nom'],
-				'prenom' => $value['prenom']
-			);
+		$pw = array();
+		
+		if (isset($this->plxRecord_adherents->result)) {
+			foreach ($this->plxRecord_adherents->result as $key => $value) {
+				$pw[] = array(
+					'rand1' => $value['rand1'],
+					'rand2' => $value['rand2'],
+					'cle' => $value['cle'],
+					'mail' => $value['mail'],
+					'salt' => $value['salt'],
+					'pass' => $value['password'],
+					'nom' => $value['nom'],
+					'prenom' => $value['prenom']
+				);
+			}
 		}
+		
 		return $pw;
 	}
 
@@ -2269,10 +2277,9 @@ class adhesion extends plxPlugin {
 	 * @author Cyril MAGUIRE
 	 */
 	public function verifPass($pw,$login){
-		//$id = md5($login);
+		
 		$listPass = $this->getPasswords();
-		//print_r($listPass);
-
+		
 		if(isset($_SESSION['maxtry']) && $_SESSION['maxtry'] >= 2) {
 			$_SESSION['timeout'] = time() + (60*15);
 		}
@@ -2281,7 +2288,7 @@ class adhesion extends plxPlugin {
 		foreach ($listPass as $k => $v) {
 
 			$logInBase = str_replace(array('-','_'),'',plxUtils::title2url(strtolower($v['nom'].$v['prenom'] )));
-
+			
 			if (sha1($v['salt'].$pw) == $v['pass'] && $login == $logInBase ) {
 				$_SESSION['account'] = plxUtils::charAleatoire(5).md5($v['mail']).plxUtils::charAleatoire(3);
 				$_SESSION['domainAd'] = $this->session_domain;
@@ -2554,6 +2561,7 @@ END;
 	 * @author	Cyril MAGUIRE
 	 **/
 	public function plxMotorDemarrageEnd() {
+		
 		$plxMotor = $this->plxMotor;
 
 			//Mot de passe oublié, on renvoie la clé si l'email correspond

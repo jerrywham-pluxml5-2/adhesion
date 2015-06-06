@@ -20,7 +20,7 @@ if($plxPlugin->getParam('showAnnuaire') != 'on') {
 if ( ( !isset($_SESSION['lockArticles']['articles']) && !isset($_SESSION['lockArticles']['categorie']) ) || ($_SESSION['lockArticles']['articles'] != 'on' && $_SESSION['lockArticles']['categorie'] != 'on') ) :
 	echo '<p class="locked">'.$plxPlugin->getLang('L_NEED_AUTH').'</p>';
 else :
-$r = $plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');?>
+$r = $plxPlugin->getAdherents();?>
 
 <table class="table" summary="membres">
 	<thead>

@@ -14,7 +14,7 @@ $plxMotor = $plxPlugin->plxMotor;
 # Control du token du formulaire
 plxToken::validateFormToken($_POST);
 
-$a = $plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
+$a = $plxPlugin->getAdherents();
 
 //$aActivites = array('arc'=>'ARC','tec'=>'TEC','irc'=>'IRC','autre'=>'Autre');
 $aA = explode(',',$plxPlugin->getParam('tabActivites'));
@@ -149,7 +149,6 @@ if(!empty($_POST)) {
 		-webkit-border-top-left-radius: 5px;
 		border-top-left-radius: 5px;
 		display: inline-block;
-		height:15px;
 		line-height:15px;
 		background:#D3D3D3;
 	}

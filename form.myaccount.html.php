@@ -23,7 +23,7 @@ $plxShow = plxShow::getInstance();
 $plxShow->plxMotor->plxCapcha = new plxCapcha();
 $plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
 
-$plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
+$plxPlugin->getAdherents();
 
 
 if(!isset($_GET['a'])) {
