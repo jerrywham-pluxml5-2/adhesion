@@ -3158,10 +3158,10 @@ function f_Misc_DelDelimiter(&$Txt,$Delim) {
 function f_Misc_GetFile(&$Txt,&$File,$LastFile='') {
 // Load the content of a file into the text variable.
 	$Txt = '';
-	if (!file_exists($File)) {
+	if (!is_file($File)) {
 		if ($LastFile==='') return false;
 		$File = dirname($LastFile).'/'.$File;
-		if (!file_exists($File)) return false;
+		if (!is_file($File)) return false;
 	}
 	$fd = fopen($File,'r',true); // 'rb' if binary for some OS
 	if ($fd===false) return false;

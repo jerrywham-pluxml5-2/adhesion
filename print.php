@@ -24,7 +24,7 @@ $chemin = PLX_PLUGINS.'adhesion/opentbs/'.$template;
 $x = pathinfo($chemin);
 $template_ext = $x['extension'];
 if (substr($template,0,4)!=='tpl_') exit("Wrong file.");
-if (!file_exists($chemin)) exit($chemin." : File does not exist.");
+if (!is_file($chemin)) exit($chemin." : File does not exist.");
 
 // Prepare some data
 $i = 0;
@@ -115,7 +115,7 @@ $chemin = PLX_PLUGINS.'adhesion/opentbs/'.$template;
 $x = pathinfo($chemin);
 $template_ext = $x['extension'];
 if (substr($template,0,4)!=='tpl_') exit("Wrong file.");
-if (!file_exists($chemin)) exit($chemin." : File does not exist.");
+if (!is_file($chemin)) exit($chemin." : File does not exist.");
 
 // Prepare some data
 $i = 0;

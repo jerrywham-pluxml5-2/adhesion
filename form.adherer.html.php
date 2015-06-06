@@ -9,6 +9,8 @@
  if(!defined('PLX_ROOT')) exit;
 
 $plxMotor = plxMotor::getInstance();
-$plxPlugin=$plxMotor->plxPlugins->getInstance('adhesion');
+
+$plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
+
 ?>
 <?php if ($plxPlugin->getParam('desc_adhesion') != str_replace("'","’",$plxPlugin->getLang('L_DEFAULT_DESC'))) echo htmlspecialchars_decode($plxPlugin->getParam('desc_adhesion'));?>

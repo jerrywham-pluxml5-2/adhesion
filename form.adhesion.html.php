@@ -12,7 +12,7 @@ if(!defined('PLX_ROOT')) exit;
 # récuperation d'une instance de plxShow
 $plxShow = plxShow::getInstance();
 $plxShow->plxMotor->plxCapcha = new plxCapcha();
-$plxPlugin = $plxShow->plxMotor->plxPlugins->getInstance('adhesion');
+$plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
 
 $id = $plxPlugin->nextIdAdherent();
 

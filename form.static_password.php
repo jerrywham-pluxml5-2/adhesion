@@ -9,7 +9,7 @@
  if(!defined('PLX_ROOT')) exit;
 
 $plxMotor = plxMotor::getInstance();
-$plxPlugin=$plxMotor->plxPlugins->getInstance('adhesion');
+$plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
 /*
 $error=false;
 

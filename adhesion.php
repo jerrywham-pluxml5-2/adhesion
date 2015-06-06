@@ -1394,6 +1394,7 @@ class adhesion extends plxPlugin {
 	 */
 	public function cnil($id=0,$mail='',$text=FALSE) {
 		$plxMotor = $this->plxMotor;
+		
 		if ($id == 0 && $mail == '') {
 			if ($text) {
 				return 'Merci de ne pas répondre à cet e-mail. Celui-ci ayant été généré automatiquement, nous ne pourrons traiter votre réponse.'."\n".'
@@ -1540,10 +1541,13 @@ class adhesion extends plxPlugin {
 		}else {
 			$id = end($this->adherentsList) + 1;
 		}
-
-		if ($this->plxRecord_adherents->result[$id]['firstDate'] == '') {
+		
+		if (	!isset($this->plxRecord_adherents->result[$id]['firstDate'])
+			||	($this->plxRecord_adherents->result[$id]['firstDate'] == '')
+		) {
 			$this->plxRecord_adherents->result[$id]['firstDate'] = time();
 		}
+		
 		# controle du mot de passe
 		$salt = empty($this->plxRecord_adherents->result[$id]['salt']) ? plxUtils::charAleatoire(10) : $this->plxRecord_adherents->result[$id]['salt'];
 		$this->plxRecord_adherents->result[$id]['salt'] = $salt;
@@ -1971,7 +1975,9 @@ class adhesion extends plxPlugin {
 
 			$time = (empty($adherent['firstDate'])) ? time() : plxUtils::cdataCheck($adherent['firstDate']);
 
-			if (is_file(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$this->plxGlob_adherents->aFiles[$id])) {
+			if (	isset($this->plxGlob_adherents->aFiles[$id])
+				&&	is_file(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$this->plxGlob_adherents->aFiles[$id])
+			) {
 				$fileName = $this->plxGlob_adherents->aFiles[$id];
 			} else {
 				$fileName = $id.'.'.plxUtils::title2filename(plxUtils::cdataCheck($adherent['nom']).'.'.plxUtils::cdataCheck($adherent['prenom'])).'.'.time().'.xml';

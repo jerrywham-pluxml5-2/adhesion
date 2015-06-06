@@ -21,7 +21,7 @@ if ( ( !isset($_SESSION['lockArticles']['articles']) && !isset($_SESSION['lockAr
 # récuperation d'une instance de plxShow
 $plxShow = plxShow::getInstance();
 $plxShow->plxMotor->plxCapcha = new plxCapcha();
-$plxPlugin = $plxShow->plxMotor->plxPlugins->getInstance('adhesion');
+$plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
 
 $plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
 
