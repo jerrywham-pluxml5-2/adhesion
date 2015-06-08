@@ -2842,7 +2842,7 @@ END;
 		</p>
 	</fieldset>
 </form>
-<p id="myaccount"><a href="<?php echo $plxShow->urlRewrite(\'?myaccount.html&a='.$_SESSION['account'].'\');?>">'.$this->getLang('L_MY_ACCOUNT').'</a></p>
+<p id="myaccount"><a href="<?php echo $plxShow->urlRewrite(\'?myaccount.html\');?>">'.$this->getLang('L_MY_ACCOUNT').'</a></p>
 </div>
 ';
 			else :

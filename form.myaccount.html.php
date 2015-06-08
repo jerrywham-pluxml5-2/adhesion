@@ -26,16 +26,17 @@ $plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
 $plxPlugin->getAdherents();
 
 
-if(!isset($_GET['a'])) {
+if(!isset($_SESSION['account'])) {
 	header('Location:'.$plxMotor->urlRewrite());
 	exit();
 }
-$verif = substr($_GET['a'],5,-3);
+$verif = substr($_SESSION['account'],5,-3);
 $compte = array(NULL);
+
 foreach ($plxPlugin->plxRecord_adherents->result as $key => $account) {
 	if (md5($account['mail']) == $verif) {
 		$compte = $plxPlugin->plxRecord_adherents->result[$key];
-		$compte['id'] = $key;
+		//$compte['id'] = $key;
 		break;
 	}
 }
