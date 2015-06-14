@@ -1402,23 +1402,27 @@ class adhesion extends plxPlugin {
 	 * @return bool
 	 * @author Cyril MAGUIRE
 	 */
-	public function deleteAdherentsList ($content,$mail=array(null)) {
-		$action = FALSE;
+	public function deleteAdherentsList($content, $mail = array(null)) {
+		$resultat = FALSE;
 		foreach($content['idAdherent'] as $k=>$id) {
+			
+			
 			# Vérification de l'intégrité de l'identifiant
 			if(!preg_match('/^[0-9]{5}$/',$id))
-				return false;
-			# Variable d'état
-			$resDelAd = true;
+				return FALSE;
+
 			# Suppression de l'adhérent
+			
 			if($globAd = $this->plxGlob_adherents->query('/^'.$id.'.(.*).xml$/')) {
 				unlink(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$globAd['0']);
-				$resDelAd = !is_file(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$globArt['0']);
+				$resDelAd = !is_file(PLX_ROOT.$this->getParam('adherents').'adhesions/'.$globAd['0']);
 			}
+			
 			$_SESSION['info'] = $this->getLang('L_ADMIN_REMOVE_ADH').'<br/>' ;
-			$action = TRUE;
+			$resultat = TRUE;
 		}
-		return $action;
+		
+		return $resultat;
 	}
 
 	/**
@@ -2110,8 +2114,8 @@ class adhesion extends plxPlugin {
 		}
 		# suppression
 		elseif(!empty($content['selection']) && ($content['selection'][0]=='delete' || $content['selection'][1]=='delete') && isset($content['idAdherent'])) {
-			$this->deleteAdherentsList($content);
-			$action = TRUE;
+			$resultat = $this->deleteAdherentsList($content);
+			$action = !$resultat;
 		} 
 		# mise à jour de la liste des adhérents
 		elseif(isset($content['update']) && $content['update'] == true && ($content['selection'][0]=='validation' || $content['selection'][1]=='validation' || $content['selection'][0]=='update' || $content['selection'][1]=='update')) {
