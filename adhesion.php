@@ -2281,33 +2281,6 @@ class adhesion extends plxPlugin {
 	//////////////////////////////////////////////////////////
 
 	/**
-	 * Méthode qui liste tous les mots de passe des adhérents
-	 * 
-	 * @return array
-	 * @author Cyril MAGUIRE
-	 */
-	public function getPasswords() {
-		$pw = array();
-		
-		if (isset($this->plxRecord_adherents->result)) {
-			foreach ($this->plxRecord_adherents->result as $key => $value) {
-				$pw[] = array(
-					'rand1' => $value['rand1'],
-					'rand2' => $value['rand2'],
-					'cle' => $value['cle'],
-					'mail' => $value['mail'],
-					'salt' => $value['salt'],
-					'pass' => $value['password'],
-					'nom' => $value['nom'],
-					'prenom' => $value['prenom']
-				);
-			}
-		}
-		
-		return $pw;
-	}
-
-	/**
 	 * Méthode qui vérifie si le mot de passe saisi par l'utilisateur est dans la liste des mots de passe
 	 * @param $pw string Mot de passe saisi crypté en md5
 	 * @param $login string identifiant, correspondant au nom collé au prénom en minuscules sans espace ni caractères accentués ou exotiques
@@ -2317,27 +2290,35 @@ class adhesion extends plxPlugin {
 	 */
 	public function verifPass($pw,$login){
 		
-		$listPass = $this->getPasswords();
-		
 		if(isset($_SESSION['maxtry']) && $_SESSION['maxtry'] >= 2) {
 			$_SESSION['timeout'] = time() + (60*15);
 		}
 		
+		
 		$error = false;
-		foreach ($listPass as $k => $v) {
-
+		foreach ($this->plxRecord_adherents->result as $k => $v) {
+			
+			if ("1" !== $v["validation"]) {
+				continue;
+			}
+			
 			$logInBase = str_replace(array('-','_'),'',plxUtils::title2url(strtolower($v['nom'].$v['prenom'] )));
 			
-			if (sha1($v['salt'].$pw) == $v['pass'] && $login == $logInBase ) {
+			if (sha1($v['salt'].$pw) == $v['password'] && $login == $logInBase ) {
 				$_SESSION['account'] = plxUtils::charAleatoire(5).md5($v['mail']).plxUtils::charAleatoire(3);
 				$_SESSION['domainAd'] = $this->session_domain;
 				unset($_SESSION['maxtry']);
 				return TRUE;
 			}
-			if ( (sha1($v['salt'].$pw) != $v['pass'] && $login == $logInBase) || (sha1($v['salt'].$pw) == $v['pass'] && $login != $logInBase) ) {
+			
+			if (	(sha1($v['salt'].$pw) != $v['password'] && $login == $logInBase) 
+				||	(sha1($v['salt'].$pw) == $v['password'] && $login != $logInBase)
+			) {
 				$error = true;
 			}
 		}
+		
+		
 		if ($error) {
 			if(!isset($_SESSION['maxtry'])) {
 				$_SESSION['maxtry'] = 1;

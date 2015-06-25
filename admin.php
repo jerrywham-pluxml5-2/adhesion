@@ -63,9 +63,7 @@ if(isset($_GET['forgetmypass']) && !empty($_GET['forgetmypass'])) {
 if(!empty($_POST)) {
 
 	//echo'<pre>';print_r($_POST);echo '</pre>';exit();
-	if (	isset($_POST['adherentNum'][0])
-		&&	($_POST['nom_'.$_POST['adherentNum'][0]] =='nom')
-	){
+	if ($_POST['nom_'.$_POST['adherentNum'][0]] =='nom'){
 		unset($_POST['nom_'.$_POST['adherentNum'][0]]);
 		unset($_POST['prenom_'.$_POST['adherentNum'][0]]);
 		unset($_POST['adresse1_'.$_POST['adherentNum'][0]]);
@@ -103,15 +101,12 @@ if(!empty($_POST)) {
 	}
 	tr input {
 		border:none;
-		text-transform:capitalize;
 	}
 	tr input.clefs {
 		border:none;
-		text-transform:none;
 	}
 	tr input.email {
 		border:none;
-		text-transform:lowercase;
 	}
 	tr.new {
 		background: #D6E3B3;
