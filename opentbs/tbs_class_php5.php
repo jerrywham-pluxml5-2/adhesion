@@ -3183,7 +3183,7 @@ static function f_Misc_DelDelimiter(&$Txt,$Delim) {
 static function f_Misc_GetFile(&$Res,&$File,$LastFile='',$Contents=true) {
 // Load the content of a file into the text variable.
 	$Res = '';
-	$fd = @fopen($File,'r',true); // 'rb' if binary for some OS. fopen() uses include_path and search on the __FILE__ directory while file_exists() doesn't.
+	$fd = @fopen($File,'r',true); // 'rb' if binary for some OS. fopen() uses include_path and search on the __FILE__ directory while is_file() doesn't.
 	if ($fd===false) {
 		if ($LastFile==='') return false;
 		$File2 = dirname($LastFile).'/'.$File;

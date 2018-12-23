@@ -900,12 +900,12 @@ $xxx = ''.substr($Txt, $Loc->PosBeg, $Loc->PosEnd - $Loc->PosBeg + 1);
 		$ok = true; // true if the picture file is actually inserted and ready to be changed
 
 		// check if the picture exists, and eventually use the default picture
-		if (!file_exists($FullPath)) {
+		if (!is_file($FullPath)) {
 			if (isset($PrmLst['default'])) {
 				$x = $PrmLst['default'];
 				if ($x==='current') {
 					$ok = false;
-				} elseif (file_exists($x)) {
+				} elseif (is_file($x)) {
 					$FullPath = $x;
 				} else {
 					$ok = $this->RaiseError('The default picture "'.$x.'" defined by parameter "default" of the field ['.$Loc->FullName.'] is not found.');
@@ -3302,7 +3302,7 @@ class clsTbsZip {
 		} else {
 			$path = $Data;
 			$Data = false;
-			if (file_exists($path)) {
+			if (is_file($path)) {
 				$fz = filesize($path);
 				if ($len_u===false) $len_u = $fz;
 				$len_c = ($Compress) ? false : $fz;

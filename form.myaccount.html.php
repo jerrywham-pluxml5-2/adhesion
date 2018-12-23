@@ -21,21 +21,22 @@ if ( ( !isset($_SESSION['lockArticles']['articles']) && !isset($_SESSION['lockAr
 # récuperation d'une instance de plxShow
 $plxShow = plxShow::getInstance();
 $plxShow->plxMotor->plxCapcha = new plxCapcha();
-$plxPlugin = $plxShow->plxMotor->plxPlugins->getInstance('adhesion');
+$plxPlugin = $plxShow->plxMotor->plxPlugins->aPlugins["adhesion"];
 
-$plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
+$plxPlugin->getAdherents();
 
 
-if(!isset($_GET['a'])) {
+if(!isset($_SESSION['account'])) {
 	header('Location:'.$plxMotor->urlRewrite());
 	exit();
 }
-$verif = substr($_GET['a'],5,-3);
+$verif = substr($_SESSION['account'],5,-3);
 $compte = array(NULL);
+
 foreach ($plxPlugin->plxRecord_adherents->result as $key => $account) {
 	if (md5($account['mail']) == $verif) {
 		$compte = $plxPlugin->plxRecord_adherents->result[$key];
-		$compte['id'] = $key;
+		//$compte['id'] = $key;
 		break;
 	}
 }
@@ -122,7 +123,7 @@ if(!empty($_POST) && empty($wall_e)) {
 		# On édite le compte de l'adhérent
 		if ($plxPlugin->editMyAccount($compte,$compte['id'])) {
 			//Si l'utilisateur ne souhaite plus être membre de l'asso, on envoie une notification à un admin
-			if($choix == 'stop') {
+			if($compte['choix'] == 'stop') {
 				$content = $plxPlugin->notification($compte['nom'],$compte['prenom'],$compte['adresse1'],$compte['adresse2'],$compte['cp'],$compte['ville'],$compte['tel'],$compte['mail'],$compte['choix'],$compte['mailing']);
 				if($plxPlugin->sendEmail($plxPlugin->getParam('nom_asso'),$plxPlugin->getParam('email'),$plxPlugin->getParam('email'),$plxPlugin->getParam('devalidation_subject'),$content,'html')){
 						$_SESSION['erase'] = '<p id="password_success">'.$plxPlugin->getLang('L_EDIT_OK').'<br/>'.$plxPlugin->getLang('L_FORM_ERASE_OK').'</p>';

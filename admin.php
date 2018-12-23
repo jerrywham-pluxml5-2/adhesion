@@ -9,12 +9,12 @@
 
 if(!defined('PLX_ROOT')) exit; 
 
-$plxMotor = plxMotor::getInstance();
+$plxMotor = $plxPlugin->plxMotor;
 
 # Control du token du formulaire
 plxToken::validateFormToken($_POST);
 
-$a = $plxPlugin->getAdherents('/^[0-9]{5}.(.[a-z-]+){2}.[0-9]{10}.xml$/');
+$a = $plxPlugin->getAdherents();
 
 //$aActivites = array('arc'=>'ARC','tec'=>'TEC','irc'=>'IRC','autre'=>'Autre');
 $aA = explode(',',$plxPlugin->getParam('tabActivites'));
@@ -101,15 +101,12 @@ if(!empty($_POST)) {
 	}
 	tr input {
 		border:none;
-		text-transform:capitalize;
 	}
 	tr input.clefs {
 		border:none;
-		text-transform:none;
 	}
 	tr input.email {
 		border:none;
-		text-transform:lowercase;
 	}
 	tr.new {
 		background: #D6E3B3;
@@ -149,7 +146,6 @@ if(!empty($_POST)) {
 		-webkit-border-top-left-radius: 5px;
 		border-top-left-radius: 5px;
 		display: inline-block;
-		height:15px;
 		line-height:15px;
 		background:#D3D3D3;
 	}
@@ -221,7 +217,10 @@ if(!empty($_POST)) {
 			$ad = $plxPlugin->plxRecord_adherents;
 				if ($ad->f('validation') == 0) {
 				$ordre = ++$num;
-				if (!array_key_exists($ad->f('activite'),$aActivites)) {
+				
+				if (	!$ad->f('activite')
+					||	!array_key_exists($ad->f('activite'), $aActivites)
+				) {
 					$activite = 'autre';
 					$autre_activite = $ad->f('activite');
 				} else {
@@ -268,7 +267,7 @@ if(!empty($_POST)) {
 				echo '<tr><td colspan="8" style="text-align:center;"><strong>'.$plxPlugin->getLang('L_ADMIN_VALIDATION_PENDING').'</strong></td></tr>';
 			}
 			# On récupère le dernier identifiant
-			$lastId = array_keys($plxPlugin->plxRecord_adherents);
+			$lastId = array_keys($plxPlugin->plxRecord_adherents->result);
 			rsort($lastId);
 		}
 		else {
